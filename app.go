@@ -31,8 +31,8 @@ East to West (Lat) : 98 to 70
 North to South (Lon): 36 to 8
 */
 type Loc struct {
-	Lat float64
-	Lon float64
+	Lat float64 `json:"Latitude"`
+	Lon float64 `json:"Longitude"`
 }
 
 // StateCentriod has centriod of the state
@@ -86,42 +86,56 @@ func DataPrep() {
 	}
 }
 
-// ListStatesOnly returns all the states of India
-func ListStatesOnly(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		var states []string
-		for _, sc := range sCentriods {
-			if !sc.isUT {
-				states = append(states, sc.State)
+// ListStatesAndUT list states and union territories basis
+func ListStatesAndUT(ut bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			var states []string
+			for _, sc := range sCentriods {
+				// Only states
+				if !ut && !sc.isUT {
+					states = append(states, sc.State)
+				}
+				// States and Union territories
+				if ut {
+					states = append(states, sc.State)
+				}
 			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(states)
+		} else {
+			fmt.Fprintf(w, "Method not supported")
 		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(states)
-	} else {
-		fmt.Fprintf(w, "Method not supported")
 	}
 }
 
-// ListStatesAndUT returns all the states of India
-func ListStatesAndUT(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		var states []string
-		for _, sc := range sCentriods {
-			states = append(states, sc.State)
+/*
+// GetState returns state if geolocation point lies in it
+func GetState(w http.ResponseWriter, r *http.Request) {
+	var location Loc
+	if r.Method == "POST" {
+		err := json.NewDecoder(r.Body).Decode(&location)
+		if err != nil {
+			json.NewEncoder(w).Encode(`{'error': 'Error in decoding JSON'}`)
+			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(states)
-	} else {
-		fmt.Fprintf(w, "Method not supported")
-	}
 
+		result := isPointInsidePolygon(featureCollections, orb.Point{93.789047, 6.852571})
+		if result == "" {
+			fmt.Println("Given geolocation does not lie in the India.")
+		} else {
+			fmt.Println(result)
+		}
+
+	}
 }
+*/
 
 func main() {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/statesonly", ListStatesOnly)
-	mux.HandleFunc("/states-ut", ListStatesAndUT)
+	mux.HandleFunc("/statesonly", ListStatesAndUT(false))
+	mux.HandleFunc("/states-ut", ListStatesAndUT(true))
 	fmt.Println("Serving on :9000")
 	log.Fatal(http.ListenAndServe(":9000", mux))
 
