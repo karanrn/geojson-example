@@ -9,8 +9,8 @@ import (
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
 
-	"github.com/karanrn/geojson-example/geodata"
-	"github.com/karanrn/geojson-example/helper"
+	"github.com/karanrn/geojson-example/app/geodata"
+	"github.com/karanrn/geojson-example/app/helper"
 )
 
 const (

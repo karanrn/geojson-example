@@ -3,7 +3,7 @@ package helper
 import (
 	"github.com/paulmach/orb"
 
-	"github.com/karanrn/geojson-example/geodata"
+	"github.com/karanrn/geojson-example/app/geodata"
 )
 
 // GetCentriod of the polygon
