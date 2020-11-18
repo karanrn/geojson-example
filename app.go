@@ -8,6 +8,7 @@ https://www.geeksforgeeks.org/find-the-centroid-of-a-non-self-intersecting-close
 import (
 	"fmt"
 	"io/ioutil"
+	"sort"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
@@ -23,15 +24,19 @@ const (
 East to West (Lat) : 98 to 70
 North to South (Lon): 36 to 8
 */
-type loc struct {
+// Loc holds Latitude and Longitude information
+type Loc struct {
 	Lat float64
 	Lon float64
 }
 
-type stateCentriod struct {
+// StateCentriod has centriod of the state
+type StateCentriod struct {
 	State    string
-	Centriod loc
+	Centriod Loc
 }
+
+type StateCentriodList []StateCentriod
 
 func main() {
 	// Open/load the file
@@ -61,18 +66,18 @@ func main() {
 	*/
 
 	// Find centriods of the state
-	var sCentriods []stateCentriod
+	var sCentriods []StateCentriod
 	for _, feature := range featureCollections.Features {
 		_, isMulti := feature.Geometry.(orb.MultiPolygon)
 		if isMulti {
 			//fmt.Println(feature.Properties["NAME_1"], feature.Geometry.(orb.MultiPolygon)[0][0])
-			sCentriods = append(sCentriods, stateCentriod{
+			sCentriods = append(sCentriods, StateCentriod{
 				State:    feature.Properties["NAME_1"].(string),
 				Centriod: getCentroid(feature.Geometry.(orb.MultiPolygon)[0][0]),
 			})
 
 		} else {
-			sCentriods = append(sCentriods, stateCentriod{
+			sCentriods = append(sCentriods, StateCentriod{
 				State:    feature.Properties["NAME_1"].(string),
 				Centriod: getCentroid(feature.Geometry.(orb.Polygon)[0]),
 			})
@@ -80,14 +85,16 @@ func main() {
 		//break
 	}
 
+	// East to West
+	sort.Sort(StateCentriodList(sCentriods))
 	for _, s := range sCentriods {
 		fmt.Println(s)
 	}
 
 }
 
-func getCentroid(or orb.Ring) loc {
-	var centriod loc
+func getCentroid(or orb.Ring) Loc {
+	var centriod Loc
 	n := len(or)
 	signedArea := 0.0
 	for i := 0; i < n; i++ {
@@ -127,4 +134,16 @@ func isPointInsidePolygon(fc *geojson.FeatureCollection, point orb.Point) string
 		}
 	}
 	return ""
+}
+
+func (s StateCentriodList) Len() int {
+	return len(s)
+}
+
+func (s StateCentriodList) Less(i, j int) bool {
+	return s[i].Centriod.Lat > s[j].Centriod.Lat
+}
+
+func (s StateCentriodList) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
 }
