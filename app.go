@@ -120,7 +120,7 @@ func GetState(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		result := isPointInsidePolygon(featureCollections, orb.Point{93.789047, 6.852571})
+		result := isPointInsidePolygon(featureCollections, orb.Point{location.Lat, location.Lon})
 		if result == "" {
 			fmt.Fprintf(w, "given geolocation does not lie in the India")
 		} else {
