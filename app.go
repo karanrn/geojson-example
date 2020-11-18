@@ -1,10 +1,5 @@
 package main
 
-/*
-https://golangcode.com/is-point-within-polygon-from-geojson/
-https://www.geeksforgeeks.org/find-the-centroid-of-a-non-self-intersecting-closed-polygon/
-
-*/
 import (
 	"fmt"
 	"io/ioutil"
@@ -69,9 +64,11 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/states/all", geodata.ListStatesAndUT(false))
 	mux.HandleFunc("/states/with-ut", geodata.ListStatesAndUT(true))
-	mux.HandleFunc("/get-state", geodata.GetState)
-	mux.HandleFunc("/states/east-west", geodata.OrderStates("EW"))
-	mux.HandleFunc("/states/north-south", geodata.OrderStates("NS"))
+	mux.HandleFunc("/states/find", geodata.GetState)
+	mux.HandleFunc("/states/all/east-west", geodata.OrderStates("EW", false))
+	mux.HandleFunc("/states/all/north-south", geodata.OrderStates("NS", false))
+	mux.HandleFunc("/states/with-ut/east-west", geodata.OrderStates("EW", true))
+	mux.HandleFunc("/states/with-ut/north-south", geodata.OrderStates("NS", true))
 	fmt.Println("Serving on :9000")
 	log.Fatal(http.ListenAndServe(":9000", mux))
 

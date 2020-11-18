@@ -83,7 +83,7 @@ func GetState(w http.ResponseWriter, r *http.Request) {
 
 // OrderStates returns states ordered basis direction
 // EW for East to West, NS for North to South
-func OrderStates(direction string) http.HandlerFunc {
+func OrderStates(direction string, ut bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var states []string
 		if r.Method == "GET" {
@@ -102,7 +102,14 @@ func OrderStates(direction string) http.HandlerFunc {
 			}
 
 			for _, st := range SCentriods {
-				states = append(states, st.State)
+				// Only States
+				if !ut && !st.IsUT {
+					states = append(states, st.State)
+				}
+				// States and Union Territories
+				if ut {
+					states = append(states, st.State)
+				}
 			}
 			w.Header().Set("Content-Type", "application/json")
 			json.NewEncoder(w).Encode(states)
