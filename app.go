@@ -85,12 +85,33 @@ func main() {
 		//break
 	}
 
-	// East to West
-	sort.Sort(StateCentriodList(sCentriods))
+	// East to West, ordered alphabetically
+	sort.Slice(sCentriods, func(i, j int) bool {
+		if sCentriods[i].Centriod.Lat > sCentriods[j].Centriod.Lat {
+			return true
+		}
+		if sCentriods[i].Centriod.Lat < sCentriods[j].Centriod.Lat {
+			return false
+		}
+		return sCentriods[i].State < sCentriods[j].State
+	})
 	for _, s := range sCentriods {
 		fmt.Println(s)
 	}
 
+	// North to South, ordered alphabetically
+	sort.Slice(sCentriods, func(i, j int) bool {
+		if sCentriods[i].Centriod.Lon > sCentriods[j].Centriod.Lon {
+			return true
+		}
+		if sCentriods[i].Centriod.Lon < sCentriods[j].Centriod.Lon {
+			return false
+		}
+		return sCentriods[i].State < sCentriods[j].State
+	})
+	for _, s := range sCentriods {
+		fmt.Println(s)
+	}
 }
 
 func getCentroid(or orb.Ring) Loc {
