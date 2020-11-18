@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
@@ -45,7 +46,7 @@ type StateCentriod struct {
 // StateCentriodList slice of type StateCentriod
 type StateCentriodList []StateCentriod
 
-var featureCollections geojson.FeatureCollection
+var featureCollections *geojson.FeatureCollection
 var sCentriods []StateCentriod
 
 func init() {
@@ -57,11 +58,11 @@ func DataPrep() {
 	// Open/load the file
 	f, err := ioutil.ReadFile(GEOFILE)
 	if err != nil {
-		fmt.Errorf("error while reading json file, got %v", err.Error())
+		fmt.Printf("error while reading json file, got %v", err.Error())
 		return
 	}
 
-	featureCollections, err := geojson.UnmarshalFeatureCollection(f)
+	featureCollections, err = geojson.UnmarshalFeatureCollection(f)
 
 	// Find centriods of the state
 	for _, feature := range featureCollections.Features {
@@ -109,7 +110,6 @@ func ListStatesAndUT(ut bool) http.HandlerFunc {
 	}
 }
 
-/*
 // GetState returns state if geolocation point lies in it
 func GetState(w http.ResponseWriter, r *http.Request) {
 	var location Loc
@@ -122,70 +122,56 @@ func GetState(w http.ResponseWriter, r *http.Request) {
 
 		result := isPointInsidePolygon(featureCollections, orb.Point{93.789047, 6.852571})
 		if result == "" {
-			fmt.Println("Given geolocation does not lie in the India.")
+			fmt.Fprintf(w, "given geolocation does not lie in the India")
 		} else {
-			fmt.Println(result)
+			fmt.Fprintf(w, "(%f, %f) lies in (%s)", location.Lat, location.Lon, result)
 		}
-
+	} else {
+		fmt.Fprintf(w, "Method not supported")
 	}
 }
-*/
 
+// OrderStates returns states ordered basis direction
+// EW for East to West, NS for North to South
+func OrderStates(direction string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var states []string
+		if r.Method == "GET" {
+			// East to West
+			if direction == "EW" {
+				sort.Slice(sCentriods, func(i, j int) bool {
+					return sCentriods[i].Centriod.Lat > sCentriods[j].Centriod.Lat
+				})
+			}
+
+			// North to South
+			if direction == "NS" {
+				sort.Slice(sCentriods, func(i, j int) bool {
+					return sCentriods[i].Centriod.Lon > sCentriods[j].Centriod.Lon
+				})
+			}
+
+			for _, st := range sCentriods {
+				states = append(states, st.State)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(states)
+		} else {
+			fmt.Fprintf(w, "Method not supported")
+		}
+	}
+}
 func main() {
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/statesonly", ListStatesAndUT(false))
-	mux.HandleFunc("/states-ut", ListStatesAndUT(true))
+	mux.HandleFunc("/states/all", ListStatesAndUT(false))
+	mux.HandleFunc("/states/with-ut", ListStatesAndUT(true))
+	mux.HandleFunc("/get-state", GetState)
+	mux.HandleFunc("/states/east-west", OrderStates("EW"))
+	mux.HandleFunc("/states/north-south", OrderStates("NS"))
 	fmt.Println("Serving on :9000")
 	log.Fatal(http.ListenAndServe(":9000", mux))
 
-	/*
-		// List all states
-		for _, feature := range featureCollections.Features {
-			fmt.Println(feature.Properties["NAME_1"])
-		}
-	*/
-
-	/*
-		// Find the state in which geolocation lies - [93.789047, 6.852571]
-		result := isPointInsidePolygon(featureCollections, orb.Point{93.789047, 6.852571})
-		if result == "" {
-			fmt.Println("Given geolocation does not lie in the India.")
-		} else {
-			fmt.Println(result)
-		}
-
-	*/
-
-	/*
-		// East to West, ordered alphabetically
-		sort.Slice(sCentriods, func(i, j int) bool {
-			if sCentriods[i].Centriod.Lat > sCentriods[j].Centriod.Lat {
-				return true
-			}
-			if sCentriods[i].Centriod.Lat < sCentriods[j].Centriod.Lat {
-				return false
-			}
-			return sCentriods[i].State < sCentriods[j].State
-		})
-		for _, s := range sCentriods {
-			fmt.Println(s)
-		}
-
-		// North to South, ordered alphabetically
-		sort.Slice(sCentriods, func(i, j int) bool {
-			if sCentriods[i].Centriod.Lon > sCentriods[j].Centriod.Lon {
-				return true
-			}
-			if sCentriods[i].Centriod.Lon < sCentriods[j].Centriod.Lon {
-				return false
-			}
-			return sCentriods[i].State < sCentriods[j].State
-		})
-		for _, s := range sCentriods {
-			fmt.Println(s)
-		}
-	*/
 }
 
 func getCentroid(or orb.Ring) Loc {
