@@ -19,7 +19,7 @@ curl -X GET http://localhost:9000/states/with-ut
 **List states ordered basis directions**<br>
 Get all the states except union territories ordered from East to West.<br>
 ```
-curl -X GET http://localhost:9000/states/all/east-west
+curl -X GET http://localhost:9000/states/all/west-east
 ```
 
 Get all the states except union territories ordered from North to South.<br>
@@ -27,9 +27,9 @@ Get all the states except union territories ordered from North to South.<br>
 curl -X GET http://localhost:9000/states/all/north-south
 ```
 
-Get all the states and union territories ordered from East to West.<br>
+Get all the states and union territories ordered from West to East.<br>
 ```
-curl -X GET http://localhost:9000/states/with-ut/east-west
+curl -X GET http://localhost:9000/states/with-ut/west-east
 ```
 
 Get all the states and union territories ordered from North to South.<br>

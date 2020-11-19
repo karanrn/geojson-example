@@ -82,15 +82,15 @@ func GetState(w http.ResponseWriter, r *http.Request) {
 }
 
 // OrderStates returns states ordered basis direction
-// EW for East to West, NS for North to South
+// WE for West to East, NS for North to South
 func OrderStates(direction string, ut bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var states []string
 		if r.Method == "GET" {
-			// East to West
-			if direction == "EW" {
+			// West to East
+			if direction == "WE" {
 				sort.Slice(SCentriods, func(i, j int) bool {
-					return SCentriods[i].Centriod.Lat > SCentriods[j].Centriod.Lat
+					return SCentriods[i].Centriod.Lat < SCentriods[j].Centriod.Lat
 				})
 			}
 
